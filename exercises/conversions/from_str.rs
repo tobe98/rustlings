@@ -4,14 +4,13 @@
 // You can read more about it at https://doc.rust-lang.org/std/str/trait.FromStr.html
 use std::error;
 use std::str::FromStr;
+use std::fmt;
 
 #[derive(Debug)]
 struct Person {
     name: String,
     age: usize,
 }
-
-// I AM NOT DONE
 
 // Steps:
 // 1. If the length of the provided string is 0, an error should be returned
@@ -23,9 +22,35 @@ struct Person {
 // 6. If while extracting the name and the age something goes wrong, an error should be returned
 // If everything goes well, then return a Result of a Person object
 
+#[derive(Debug)]
+struct ParsePersonError(String);
+
+impl fmt::Display for ParsePersonError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "There is an error: {}", self.0)
+    }
+}
+
+impl error::Error for ParsePersonError {}
 impl FromStr for Person {
     type Err = Box<dyn error::Error>;
     fn from_str(s: &str) -> Result<Person, Self::Err> {
+        if s.len() == 0 {
+            return Err(Box::new(ParsePersonError("parse error".into())));
+        }
+        let strs: Vec<&str> = s.split(",").collect();
+        if strs.len() != 2 || strs[0].len() == 0{
+            return Err(Box::new(ParsePersonError("parse error".into())));
+        }
+        let name = strs[0];
+        let ageStr = strs[1];
+        if let Ok(a) = ageStr.parse::<usize>() {
+            return Ok(Person {
+                name: String::from(name),
+                age: a,
+            })
+        }
+        Err(Box::new(ParsePersonError("parse error".into())))
     }
 }
 
